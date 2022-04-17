@@ -2,14 +2,12 @@
 #include "stdlib.h"
 #define NULL_LIST -1
 
-
 typedef struct RLEList_t{
     char character;
     int repeatsInSequence;
-    
-    struct RLEList_t* next;
-    
-} *RLEList;
+    struct   RLEList_t* next;
+
+} RLEList_t;
 
 RLEList RLEListCreate()
 {
@@ -26,24 +24,25 @@ RLEList RLEListCreate()
 
 void RLEListDestroy(RLEList list)
 {
-    while(list)
+    while(list->next)
     {
       RLEList toDelete=list;
       list=list->next;
       free(toDelete);
     }
+    free(list);
 }
 
 RLEListResult RLEListAppend(RLEList list, char value)
 {
-   if (!list||!value)//nfhas ada fe hage ll value
+   if (!list||!value)
    {
       return RLE_LIST_NULL_ARGUMENT;
    }
    
     RLEList ptr=list;
 
-    while (!ptr->next)
+    while (ptr->next)
     {
        ptr=ptr->next;
     }
@@ -71,7 +70,7 @@ int RLEListSize(RLEList list)
      }
     int counter=0;
     RLEList ptr=list;
-    while (!ptr)
+    while (ptr)
      {
        counter+=ptr->repeatsInSequence;
        ptr=ptr->next; 
@@ -84,32 +83,33 @@ RLEListResult RLEListRemove(RLEList list, int index)
     {
       return RLE_LIST_NULL_ARGUMENT;
     }
-    if(index<1||index>RLEListSize(list))
+    if(index<0||index>RLEListSize(list))
     {
         return RLE_LIST_INDEX_OUT_OF_BOUNDS;
     }
-    int current=-1;
+    int current=0;
     RLEList ptr=list;
     while (current<index)
      {   int  repeats=0;
-         while (current<index && repeats<=ptr->repeatsInSequence)
+         while (current<=index && repeats<=ptr->repeatsInSequence)
          {
              current++;
+             repeats++;
          }
-         if(current>=index)
+         if(current>index)
          {
              continue;
          }
          ptr=ptr->next;
      }
-     if(ptr->repeatsInSequence==1)
+     if(ptr->next->repeatsInSequence==1)
      {
      RLEList toDelete=ptr->next;
      ptr->next=toDelete->next;
      free(toDelete);
      return RLE_LIST_SUCCESS;
      }
-     ptr->repeatsInSequence-=1;
+     ptr->next->repeatsInSequence-=1;
      return RLE_LIST_SUCCESS;
 }
 
@@ -119,18 +119,21 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
     if(!list)
     {
       *result=RLE_LIST_NULL_ARGUMENT;
+        return  0;
     }
-    if(index<1||index>RLEListSize(list))
+    if(index<0||index>RLEListSize(list))
     {
       *result=RLE_LIST_INDEX_OUT_OF_BOUNDS;
+        return 0;
     }
     int current=0;
     RLEList ptr=list;
     while (current<=index)
     {   int  repeats=0;
-        while (current<=index && repeats<=ptr->repeatsInSequence)
+        while (current<=index && repeats<ptr->repeatsInSequence)
         {
             current++;
+            repeats++;
         }
         if(current>index)
         {
@@ -138,7 +141,7 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
         }
         ptr=ptr->next;
     }
-    *result=RLE_LIST_SUCCESS;
+    result=RLE_LIST_SUCCESS;
     return ptr->character;
 }
 RLEListResult RLEListMap(RLEList list, MapFunction map_function)
@@ -149,7 +152,7 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function)
   }
   RLEList ptr=list;
   RLEList  newHead=RLEListCreate();
-  while(!ptr)
+  while(ptr)
   {
       int  repeats=0;
       while (repeats<=ptr->repeatsInSequence)
@@ -170,7 +173,7 @@ int numberOfNodes(RLEList list)
  int counter=-1;
 
     RLEList ptr=list;
-    while (!ptr)
+    while (ptr)
      {
        counter+=1;
        ptr=ptr->next; 
@@ -190,7 +193,7 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
  char* RLEListAsString=malloc(sizeof(*RLEListAsString)*(sizeOfList*3)+1);
  RLEList ptr=list;
  int i=0;
- while (!ptr)
+ while (ptr)
  {
    RLEListAsString[i]=ptr->character;
    RLEListAsString[i+1]=ptr->repeatsInSequence;
